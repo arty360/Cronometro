@@ -10,9 +10,8 @@ namespace Cronometro.ViewModel
     public class CronometroViewModel: ViewModelBase
     {
         const string _startingTime = "00:00:00";
-        public event PropertyChangedEventHandler PropertyChanged;
         Timer _timer;
-        Stopwatch _stopWatch;
+        Stopwatch _stopWatch;        
 
         public CronometroViewModel()
         {
@@ -97,35 +96,75 @@ namespace Cronometro.ViewModel
 
         #region Commands
 
-        private ViewModelCommand? startCommand;
-        public ICommand StartCommand => startCommand ??= new ViewModelCommand(Start);
+        private ViewModelCommand startCommand;
+        public ICommand StartCommand
+        {
+            get
+            {
+                if (startCommand == null)
+                {
+                    startCommand = new ViewModelCommand(Start);
+                }
+                return startCommand;
+            }
+        }
 
-        private ViewModelCommand? pauseCommand;
-        public ICommand PauseCommand => pauseCommand ??= new ViewModelCommand(Pause);
+        private ViewModelCommand pauseCommand;
+        public ICommand PauseCommand
+        {
+            get
+            {
+                if (pauseCommand == null)
+                {
+                    pauseCommand = new ViewModelCommand(Pause);
+                }
+                return pauseCommand;
+            }
+        }
 
-        private ViewModelCommand? stopCommand;
-        public ICommand StopCommand => stopCommand ??= new ViewModelCommand(Stop);
+        private ViewModelCommand stopCommand;
+        public ICommand StopCommand
+        {
+            get
+            {
+                if (stopCommand == null)
+                {
+                    stopCommand = new ViewModelCommand(Stop);
+                }
+                return stopCommand;
+            }
+        }        
 
         #endregion Commands
 
-        private void Start(object commandParameter)
+        private void Start(object obj)
         {
             _stopWatch.Start();
             _timer.Start();
-            PauseIsEnabled = true;
             StartIsEnabled = false;
-            StopIsEnabled = true;
+            PauseIsEnabled = StopIsEnabled = !StartIsEnabled;
         }
 
-        private void Pause(object commandParameter)
+        private bool CanExecuteStartCommand(object obj)
+        {
+            return !_stopWatch.IsRunning;
+        }
+
+        private void Pause(object obj)
         {
             _stopWatch.Stop();
             _timer.Stop();
             StartIsEnabled = true;
             PauseIsEnabled = false;
+            StopIsEnabled = true;
         }
 
-        private void Stop(object commandParameter)
+        private bool CanExecutePauseCommand(object obj)
+        {
+            return _stopWatch.IsRunning;
+        }
+
+        private void Stop(object obj)
         {
             _stopWatch.Reset();
             _timer.Close();
@@ -133,6 +172,11 @@ namespace Cronometro.ViewModel
             StartIsEnabled = true;
             PauseIsEnabled = false;
             StopIsEnabled = false;
+        }
+
+        private bool CanExecuteStopCommand(object obj)
+        {
+            return _stopWatch.IsRunning;
         }
 
         private void OnTimerElapsed(object sender, ElapsedEventArgs e)
